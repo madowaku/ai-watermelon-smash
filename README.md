@@ -56,7 +56,7 @@ Human debug input             WebMCP site tools
                   Three.js
 ```
 
-`GameState` contains serializable gameplay data only. Three.js meshes are views, never the source of truth. Day 2 WebMCP tools must call the same `Game` methods used by debug controls.
+`GameState` contains serializable gameplay data only. Three.js meshes are views, never the source of truth. WebMCP tools call the same `Game` methods used by debug controls.
 
 ## Day 2 scope
 
@@ -74,6 +74,10 @@ Implemented:
 - shared-success result screen
 - keyboard-only debug controls behind `?debug=1`
 - responsive DOM HUD
+- WebMCP feature detection and status HUD
+- exactly four WebMCP site tools
+- blindfold-safe tool outputs
+- Cloudflare Workers static-assets deployment config
 
 WebMCP exposes exactly four tools:
 
@@ -84,17 +88,25 @@ WebMCP exposes exactly four tools:
 
 The AI must not receive the watermelon position, target direction, obstacle map, or shortest path through tool results. The intended rule is simple: **the human sees; the AI acts**.
 
-The HUD reports `CONNECTING`, `READY`, `UNAVAILABLE`, or `ERROR`. Registration uses the current imperative `document.modelContext.registerTool()` API and is guarded so page reloads and development hot updates do not duplicate tools.
+The HUD reports `CONNECTING`, `READY`, `UNAVAILABLE`, or `ERROR`. Registration uses the imperative `document.modelContext.registerTool()` API and is guarded so page reloads and development hot updates do not duplicate tools.
 
 ### Human + AI playtest
 
-1. Open the game as a top-level page in the latest ChatGPT desktop built-in browser.
+1. Open the game as a top-level page in the ChatGPT desktop built-in browser.
 2. Confirm **Enable site tools** is on and the HUD reads `WebMCP · READY`.
 3. Open **Site tools → Available site tools** and verify the four tools above.
 4. Tell the AI where to turn and how far to walk; the AI should rely on that guidance rather than infer the target position.
 5. Ask it to swing when aligned, then use **PLAY AGAIN** to verify restart.
 
+During development, actual Site-tool invocation succeeded with GPT-5.5 in the tested ChatGPT Desktop environment. Tool discovery succeeded in another tested model configuration but invocation did not; model availability and Site-tool support may vary by environment.
+
 For ordinary browser regression testing, append `?debug=1` and use the keyboard controls documented above.
+
+## Interaction design
+
+The current design rule is **physical clarity, social ambiguity**: facing direction, movement, and swing direction should be obvious; difficulty should come from interpreting human guidance rather than fighting unclear controls.
+
+See [`docs/design/social-guidance-principles.md`](docs/design/social-guidance-principles.md) for the multiplayer/social direction.
 
 ## Handoff rule
 
