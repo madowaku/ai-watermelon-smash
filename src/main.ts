@@ -3,6 +3,7 @@ import { Game } from "./game/Game";
 import { DebugControls } from "./input/DebugControls";
 import { SceneView } from "./render/SceneView";
 import type { GameActionResult } from "./game/types";
+import { registerWebMcpTools, type WebMcpStatus } from "./webmcp/WebMcpAdapter";
 
 const app = document.querySelector<HTMLElement>("#app");
 if (!app) {
@@ -16,7 +17,7 @@ app.innerHTML = `
     <div class="hud">
       <div class="top-row">
         <div class="brand">AI WATERMELON SMASH 🍉</div>
-        <div class="status" id="ai-status">Day 1 · AI control next</div>
+        <div class="status" id="ai-status" data-state="connecting">WebMCP · CONNECTING</div>
       </div>
 
       <div class="bottom-row">
@@ -61,6 +62,7 @@ const movesStat = getRequiredElement<HTMLElement>("#moves-stat");
 const swingsStat = getRequiredElement<HTMLElement>("#swings-stat");
 const bumpsStat = getRequiredElement<HTMLElement>("#bumps-stat");
 const restartButton = getRequiredElement<HTMLButtonElement>("#restart-button");
+const aiStatus = getRequiredElement<HTMLElement>("#ai-status");
 
 const game = new Game();
 const view = new SceneView(sceneHost, () => game.getState());
@@ -70,6 +72,11 @@ debugHelp.hidden = !debugEnabled;
 
 function showActionResult(result: GameActionResult): void {
   prompt.innerHTML = `<strong>Blindfolded partner</strong>${escapeHtml(result.message)}`;
+}
+
+function showWebMcpStatus(status: WebMcpStatus): void {
+  aiStatus.dataset.state = status;
+  aiStatus.textContent = `WebMCP · ${status.toUpperCase()}`;
 }
 
 function refreshUi(): void {
@@ -90,6 +97,14 @@ if (debugEnabled) {
 restartButton.addEventListener("click", () => {
   showActionResult(game.restart());
   refreshUi();
+});
+
+void registerWebMcpTools(game, {
+  onActionResult: (result) => {
+    showActionResult(result);
+    refreshUi();
+  },
+  onStatusChange: showWebMcpStatus,
 });
 
 function frame(nowMs: number): void {
