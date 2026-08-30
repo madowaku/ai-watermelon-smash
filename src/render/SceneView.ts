@@ -55,8 +55,12 @@ export class SceneView {
     this.particles.position.set(state.watermelon.x, WATERMELON_RADIUS, state.watermelon.z);
 
     if (state.round.swingCount !== this.lastSwingCount) {
+      if (state.round.swingCount > this.lastSwingCount) {
+        this.swingStartedAt = nowMs;
+      } else {
+        this.swingStartedAt = -1;
+      }
       this.lastSwingCount = state.round.swingCount;
-      this.swingStartedAt = nowMs;
     }
 
     if (state.watermelon.broken !== this.lastBroken) {
@@ -73,7 +77,20 @@ export class SceneView {
   private readonly resize = (): void => {
     const width = Math.max(1, this.host.clientWidth);
     const height = Math.max(1, this.host.clientHeight);
-    this.camera.aspect = width / height;
+    const aspect = width / height;
+    this.camera.aspect = aspect;
+
+    if (aspect < 0.75) {
+      this.camera.position.set(0, 18, 13.5);
+      this.camera.fov = 62;
+    } else if (aspect < 1.15) {
+      this.camera.position.set(8.5, 18, 19.5);
+      this.camera.fov = 54;
+    } else {
+      this.camera.position.set(11.5, 13.5, 15.5);
+      this.camera.fov = 48;
+    }
+    this.camera.lookAt(0, 0, 0);
     this.camera.updateProjectionMatrix();
     this.renderer.setSize(width, height, false);
   };

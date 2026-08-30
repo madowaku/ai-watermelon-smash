@@ -35,7 +35,7 @@ app.innerHTML = `
         <h1>WE GOT IT! 🍉</h1>
         <p>Human + AI. One very unlucky watermelon.</p>
         <div class="stats">
-          <div class="stat"><strong id="moves-stat">0</strong><span>Moves</span></div>
+          <div class="stat"><strong id="moves-stat">0</strong><span>Actions</span></div>
           <div class="stat"><strong id="swings-stat">0</strong><span>Swings</span></div>
           <div class="stat"><strong id="bumps-stat">0</strong><span>Bumps</span></div>
         </div>
@@ -45,18 +45,22 @@ app.innerHTML = `
   </section>
 `;
 
-const sceneHost = document.querySelector<HTMLElement>("#scene-host");
-const prompt = document.querySelector<HTMLElement>("#prompt");
-const debugHelp = document.querySelector<HTMLElement>("#debug-help");
-const resultWrap = document.querySelector<HTMLElement>("#result-wrap");
-const movesStat = document.querySelector<HTMLElement>("#moves-stat");
-const swingsStat = document.querySelector<HTMLElement>("#swings-stat");
-const bumpsStat = document.querySelector<HTMLElement>("#bumps-stat");
-const restartButton = document.querySelector<HTMLButtonElement>("#restart-button");
-
-if (!sceneHost || !prompt || !debugHelp || !resultWrap || !movesStat || !swingsStat || !bumpsStat || !restartButton) {
-  throw new Error("Game UI failed to initialize.");
+function getRequiredElement<T extends HTMLElement>(selector: string): T {
+  const element = document.querySelector<T>(selector);
+  if (!element) {
+    throw new Error(`Game UI failed to initialize: missing ${selector}.`);
+  }
+  return element;
 }
+
+const sceneHost = getRequiredElement<HTMLElement>("#scene-host");
+const prompt = getRequiredElement<HTMLElement>("#prompt");
+const debugHelp = getRequiredElement<HTMLElement>("#debug-help");
+const resultWrap = getRequiredElement<HTMLElement>("#result-wrap");
+const movesStat = getRequiredElement<HTMLElement>("#moves-stat");
+const swingsStat = getRequiredElement<HTMLElement>("#swings-stat");
+const bumpsStat = getRequiredElement<HTMLElement>("#bumps-stat");
+const restartButton = getRequiredElement<HTMLButtonElement>("#restart-button");
 
 const game = new Game();
 const view = new SceneView(sceneHost, () => game.getState());
