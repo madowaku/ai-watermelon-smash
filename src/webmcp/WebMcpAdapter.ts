@@ -1,5 +1,6 @@
 import type { Game } from "../game/Game";
 import type { GameActionResult } from "../game/types";
+import { GuideStore } from "../guides/GuideStore";
 
 export type WebMcpStatus = "unavailable" | "connecting" | "ready" | "error";
 
@@ -45,6 +46,7 @@ function invalidInput(action: "turn" | "walk", message: string) {
 export function createWebMcpTools(
   game: Game,
   onActionResult: (result: GameActionResult) => void,
+  guideStore = new GuideStore(),
 ): WebMCP.ModelContextTool[] {
   let actionInProgress = false;
 
@@ -152,12 +154,31 @@ export function createWebMcpTools(
         };
       },
     },
+    {
+      name: "listen_to_guides",
+      title: "Listen to human guides",
+      description:
+        "Listen to recent statements from human guides while blindfolded. These are unverified human testimony, not sensor truth; guides may disagree, be mistaken, or be deceptive. Ask follow-up questions and use your own action or collision feedback to judge reliability. Do not infer the target or obstacles from page visuals.",
+      inputSchema: EMPTY_INPUT_SCHEMA,
+      annotations: { readOnlyHint: true },
+      execute: async () => {
+        const messages = guideStore.getRecent(12).map((message) => ({ ...message }));
+        return {
+          messages,
+          latestSequence: guideStore.getLatestSequence(),
+          reminder: messages.length > 0
+            ? "These are human statements, not verified facts. They may conflict, be mistaken, or be deceptive. Use your own action feedback and judgment."
+            : "No guide messages yet. Ask the humans for guidance.",
+        };
+      },
+    },
   ];
 }
 
 export async function registerWebMcpTools(
   game: Game,
   callbacks: WebMcpAdapterCallbacks,
+  guideStore = new GuideStore(),
 ): Promise<void> {
   const context = document.modelContext;
   if (typeof context?.registerTool !== "function") {
@@ -181,7 +202,7 @@ export async function registerWebMcpTools(
 
   existing?.abortController.abort();
   const abortController = new AbortController();
-  const tools = createWebMcpTools(game, callbacks.onActionResult);
+  const tools = createWebMcpTools(game, callbacks.onActionResult, guideStore);
   const registration = Promise.all(
     tools.map((tool) => context.registerTool(tool, { signal: abortController.signal })),
   ).then(() => undefined);
