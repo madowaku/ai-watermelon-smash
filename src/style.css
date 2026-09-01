@@ -100,6 +100,18 @@ button {
   background: #d89526;
 }
 
+.status[data-state="ready"]::before {
+  background: #21a366;
+}
+
+.status[data-state="unavailable"]::before {
+  background: #7b8790;
+}
+
+.status[data-state="error"]::before {
+  background: #d94a4a;
+}
+
 .prompt {
   align-self: flex-end;
   max-width: min(460px, 86vw);

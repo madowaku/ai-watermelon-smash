@@ -8,9 +8,9 @@ The human can see the beach, obstacles, and watermelon. The AI character is blin
 > AI: control without vision.  
 > Goal: smash the watermelon together.
 
-## Current milestone: Day 1 playable
+## Current milestone: Day 2 WebMCP
 
-This branch intentionally implements the game loop **before WebMCP**. Open the debug build, guide the character with the keyboard, and prove that movement, collision, swinging, success, restart, rendering, and responsive HUD all work independently of the agent layer.
+The playable Day 1 loop now exposes four WebMCP site tools through a thin adapter around the same `Game` API used by debug controls. In a supported browser, a human supplies visual guidance while the blindfolded AI turns, walks, and swings. Unsupported browsers keep the full game playable and show `WebMCP · UNAVAILABLE` without throwing.
 
 ### Local development
 
@@ -44,7 +44,7 @@ npm run preview
 The simulation state is deliberately independent from Three.js.
 
 ```text
-Human debug input (Day 1)     WebMCP tools (Day 2)
+Human debug input             WebMCP site tools
              \                  /
               \                /
                    Game API
@@ -56,9 +56,9 @@ Human debug input (Day 1)     WebMCP tools (Day 2)
                   Three.js
 ```
 
-`GameState` contains serializable gameplay data only. Three.js meshes are views, never the source of truth. Day 2 WebMCP tools must call the same `Game` methods used by debug controls.
+`GameState` contains serializable gameplay data only. Three.js meshes are views, never the source of truth. WebMCP tools call the same `Game` methods used by debug controls.
 
-## Day 1 scope
+## Day 2 scope
 
 Implemented:
 
@@ -74,20 +74,12 @@ Implemented:
 - shared-success result screen
 - keyboard-only debug controls behind `?debug=1`
 - responsive DOM HUD
+- WebMCP feature detection and status HUD
+- exactly four WebMCP site tools
+- blindfold-safe tool outputs
+- Cloudflare Workers static-assets deployment config
 
-Not implemented yet:
-
-- WebMCP registration
-- ChatGPT/browser-agent control
-- action locking/async animation contract
-- SFX
-- automated browser tests
-- package lock (generate with local `npm install`)
-- production deployment
-
-## Day 2 WebMCP target
-
-Expose only four tools:
+WebMCP exposes exactly four tools:
 
 - `turn(degrees)`
 - `walk(distance)`
@@ -95,6 +87,26 @@ Expose only four tools:
 - `get_self_status()`
 
 The AI must not receive the watermelon position, target direction, obstacle map, or shortest path through tool results. The intended rule is simple: **the human sees; the AI acts**.
+
+The HUD reports `CONNECTING`, `READY`, `UNAVAILABLE`, or `ERROR`. Registration uses the imperative `document.modelContext.registerTool()` API and is guarded so page reloads and development hot updates do not duplicate tools.
+
+### Human + AI playtest
+
+1. Open the game as a top-level page in the ChatGPT desktop built-in browser.
+2. Confirm **Enable site tools** is on and the HUD reads `WebMCP · READY`.
+3. Open **Site tools → Available site tools** and verify the four tools above.
+4. Tell the AI where to turn and how far to walk; the AI should rely on that guidance rather than infer the target position.
+5. Ask it to swing when aligned, then use **PLAY AGAIN** to verify restart.
+
+During development, actual Site-tool invocation succeeded with GPT-5.5 in the tested ChatGPT Desktop environment. Tool discovery succeeded in another tested model configuration but invocation did not; model availability and Site-tool support may vary by environment.
+
+For ordinary browser regression testing, append `?debug=1` and use the keyboard controls documented above.
+
+## Interaction design
+
+The current design rule is **physical clarity, social ambiguity**: facing direction, movement, and swing direction should be obvious; difficulty should come from interpreting human guidance rather than fighting unclear controls.
+
+See [`docs/design/social-guidance-principles.md`](docs/design/social-guidance-principles.md) for the multiplayer/social direction.
 
 ## Handoff rule
 

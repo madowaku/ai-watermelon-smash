@@ -48,7 +48,9 @@ export class SceneView {
     const state = this.getState();
 
     this.player.position.set(state.player.x, 0, state.player.z);
-    this.player.rotation.y = THREE.MathUtils.degToRad(state.player.headingDeg);
+    // Game heading 0 faces local -Z. Three.js positive Y rotation turns -Z
+    // toward -X, so negate the game heading to keep the visual facing aligned.
+    this.player.rotation.y = THREE.MathUtils.degToRad(-state.player.headingDeg);
 
     this.watermelonWhole.position.set(state.watermelon.x, WATERMELON_RADIUS, state.watermelon.z);
     this.watermelonBroken.position.set(state.watermelon.x, WATERMELON_RADIUS * 0.7, state.watermelon.z);
@@ -157,10 +159,16 @@ export class SceneView {
     head.castShadow = true;
     this.player.add(head);
 
-    const band = new THREE.Mesh(new THREE.BoxGeometry(0.72, 0.18, 0.38), blindfold);
-    band.position.set(0, 1.99, -0.12);
+    const band = new THREE.Mesh(new THREE.BoxGeometry(0.64, 0.18, 0.12), blindfold);
+    band.position.set(0, 1.99, -0.31);
     band.castShadow = true;
     this.player.add(band);
+
+    const nose = new THREE.Mesh(new THREE.ConeGeometry(0.075, 0.2, 8), skin);
+    nose.position.set(0, 1.86, -0.34);
+    nose.rotation.x = -Math.PI / 2;
+    nose.castShadow = true;
+    this.player.add(nose);
 
     const legGeometry = new THREE.CylinderGeometry(0.11, 0.12, 0.65, 9);
     for (const x of [-0.2, 0.2]) {
@@ -170,10 +178,10 @@ export class SceneView {
       this.player.add(leg);
     }
 
-    this.stickPivot.position.set(0.4, 1.35, -0.12);
-    const stick = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.055, 2.25, 10), wood);
-    stick.position.set(0, -0.72, -0.62);
-    stick.rotation.x = Math.PI * 0.37;
+    this.stickPivot.position.set(0.4, 1.35, -0.08);
+    const stickLength = 2.25;
+    const stick = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.055, stickLength, 10), wood);
+    stick.position.set(0, -stickLength / 2, 0);
     stick.castShadow = true;
     this.stickPivot.add(stick);
     this.player.add(this.stickPivot);
@@ -281,7 +289,7 @@ export class SceneView {
 
   private updateSwing(nowMs: number): void {
     if (this.swingStartedAt < 0) {
-      this.stickPivot.rotation.x = -0.25;
+      this.stickPivot.rotation.x = -0.15;
       return;
     }
 
@@ -289,7 +297,7 @@ export class SceneView {
     const duration = 420;
     const t = Math.min(1, elapsed / duration);
     const strike = Math.sin(t * Math.PI);
-    this.stickPivot.rotation.x = -0.25 - strike * 1.55;
+    this.stickPivot.rotation.x = -0.15 + strike * 1.35;
 
     if (t >= 1) {
       this.swingStartedAt = -1;

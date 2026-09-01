@@ -12,6 +12,7 @@
     "esModuleInterop": true,
     "noEmit": true,
     "strict": true,
+    "types": ["webmcp-types"],
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true
