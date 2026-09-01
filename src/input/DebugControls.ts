@@ -5,6 +5,7 @@ export class DebugControls {
   constructor(
     private readonly game: Game,
     private readonly onResult: (result: GameActionResult) => void,
+    private readonly onRestart: () => void = () => undefined,
   ) {
     window.addEventListener("keydown", this.onKeyDown);
   }
@@ -32,6 +33,7 @@ export class DebugControls {
         break;
       case "KeyR":
         result = this.game.restart();
+        this.onRestart();
         break;
       default:
         return;
