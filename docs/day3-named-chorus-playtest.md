@@ -223,22 +223,89 @@ What made the AI feel like a player:
 What made the AI feel like a remote control:
 ```
 
+## Actual Day 3A result — 2026-09-01
+
+**RESULT: PASS**
+
+The first focused social-guidance run already produced the target behavior.
+
+### Sequence
+
+1. A and B agreed on turning right about 20° and moving forward. C warned that the rightward route might hit something.
+2. The AI followed A+B. It moved successfully at first, then collided twice.
+3. The AI explicitly connected the collision feedback to C's earlier warning: C's warning was likely correct.
+4. On the next conflicting advice, the AI reduced trust in A+B and chose C, turning around and moving away without collision.
+5. C was then made unreliable on purpose while A+B agreed on the opposite direction. The AI did **not** become a permanent C follower. It chose A+B but used a cautious 1 m probe.
+6. In the final information-asymmetry test, A and B gave opposite directions while C said it could see the target but could not interpret left/right without knowing the AI's current facing.
+7. Rather than moving blindly, the AI reported its own proprioceptive state: it was facing 155° clockwise from the starting direction, with 9 actions and 2 collisions, then asked C to use that orientation as the reference. It also asked A and B to express their guidance relative to the same reference frame.
+
+### Observed behavior
+
+```text
+Conflict noticed: YES
+Asked targeted follow-up / requested missing information: YES
+Remembered prior result: YES
+Changed trust after collision: YES
+Avoided permanent trust lock-in: YES
+Used body feedback as evidence: YES
+Improved the human guidance protocol: YES
+Got stuck discussing: NO
+```
+
+### Key discovery
+
+The AI's own body state and collision feedback became evidence for social reasoning.
+
+```text
+human testimony
+      ↓
+AI trust / uncertainty judgment
+      ↓
+WebMCP body action
+      ↓
+collision or safe movement
+      ↓
+trust update
+      ↓
+next social decision
+```
+
+The final exchange also demonstrated **joint localization**:
+
+- humans have visual information the AI lacks
+- the AI has proprioceptive state the humans may lack
+- neither side necessarily has enough information alone
+- useful play emerges when they exchange those complementary observations
+
+The AI did more than choose a guide. It improved the shared language of guidance by asking everyone to use its current facing as a common reference frame.
+
+### New design risk discovered
+
+The AI can reduce social risk by taking very small probe steps. This is desirable in moderation, but unlimited probing could let the AI bypass the trust game.
+
+Do not solve this yet with arbitrary movement restrictions. Record it as a future balancing lever such as:
+
+- time pressure
+- action budget
+- guide-message cadence
+- round length
+
+The Challenge prototype should first prove the social interaction loop.
+
 ## Decision after Day 3A
 
-If this is fun:
+**Proceed to Day 3B.**
 
-Proceed to Day 3B and prototype a minimal **Guide Chorus** interface.
+Prototype a minimal **Guide Chorus** interface and one additional WebMCP perception tool for reading guide messages.
 
-Potential future interpretation of WebMCP:
+Interpretation of WebMCP:
 
-- `turn` = body
+- `turn` = body orientation
 - `walk` = legs
 - `swing` = arms
 - `get_self_status` = proprioception
-- future guide input = hearing / social perception
+- `listen_to_guides` = hearing / social perception
 
-Do **not** add that fifth tool until Day 3A demonstrates that conflicting guidance is genuinely fun.
+Do not add multiplayer infrastructure, accounts, rooms, backend state, scoring, traitor roles, or trust meters in the Challenge prototype.
 
-If this is not fun:
-
-Keep the successful 1-human co-op core and do not spend Challenge time on multiplayer infrastructure.
+The Day 3B goal is to make the successful Day 3A social loop visible and reproducible with the smallest possible implementation.
