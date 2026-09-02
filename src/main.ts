@@ -118,6 +118,12 @@ const game = new Game();
 const guideStore = new GuideStore();
 const view = new SceneView(sceneHost, () => game.getState());
 const debugEnabled = new URLSearchParams(window.location.search).get("debug") === "1";
+const RESULT_REVEAL_DELAY_MS = 780;
+const COMPACT_VIEWPORT_QUERY = "(max-width: 640px), (max-aspect-ratio: 0.75)";
+let presentationRoundStartedAt = game.getState().round.startedAtMs;
+let successObservedAt: number | null = null;
+
+const isCompactViewport = (): boolean => window.matchMedia(COMPACT_VIEWPORT_QUERY).matches;
 
 debugHelp.hidden = !debugEnabled;
 
@@ -133,7 +139,8 @@ function clearGuideMessages(): void {
     }
   }
   guideFeedback.textContent = "";
-  setGuideCollapsed(window.matchMedia("(max-width: 640px)").matches);
+  delete guideFeedback.dataset.state;
+  setGuideCollapsed(isCompactViewport());
 }
 
 function submitGuideMessage(guide: GuideId): void {
@@ -152,7 +159,8 @@ function submitGuideMessage(guide: GuideId): void {
   input.value = "";
   latest.textContent = message.text;
   latest.dataset.hasMessage = "true";
-  guideFeedback.textContent = "";
+  guideFeedback.textContent = `Guide ${guide} message sent.`;
+  guideFeedback.dataset.state = "success";
 }
 
 for (const guide of guideIds) {
@@ -167,7 +175,7 @@ const setGuideCollapsed = (collapsed: boolean): void => {
   guideChorus.dataset.collapsed = String(collapsed);
   guideToggle.setAttribute("aria-expanded", String(!collapsed));
 };
-setGuideCollapsed(window.matchMedia("(max-width: 640px)").matches);
+setGuideCollapsed(isCompactViewport());
 guideToggle.addEventListener("click", () => {
   setGuideCollapsed(guideChorus.dataset.collapsed !== "true");
 });
@@ -181,12 +189,23 @@ function showWebMcpStatus(status: WebMcpStatus): void {
   aiStatus.textContent = `WebMCP · ${status.toUpperCase()}`;
 }
 
-function refreshUi(): void {
+function refreshUi(nowMs = performance.now()): void {
   const state = game.getState();
+  if (state.round.startedAtMs !== presentationRoundStartedAt) {
+    presentationRoundStartedAt = state.round.startedAtMs;
+    successObservedAt = null;
+  }
+  if (state.phase === "success") {
+    successObservedAt ??= nowMs;
+  } else {
+    successObservedAt = null;
+  }
   movesStat.textContent = String(state.round.moveCount);
   swingsStat.textContent = String(state.round.swingCount);
   bumpsStat.textContent = String(state.round.collisionCount);
-  resultWrap.dataset.visible = String(state.phase === "success");
+  const resultVisible = state.phase === "success" && successObservedAt !== null && nowMs - successObservedAt >= RESULT_REVEAL_DELAY_MS;
+  resultWrap.dataset.visible = String(resultVisible);
+  resultWrap.dataset.pending = String(state.phase === "success" && !resultVisible);
   if (state.phase === "success") setGuideCollapsed(true);
 }
 
